@@ -1,2 +1,470 @@
 # A.V.E.
 App para ajudar estudantes 
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>A.V.E</title>
+
+<style>
+:root{
+  --bg:#0e0f13;
+  --card:#1a1c22;
+  --primary:#4cafef;
+  --user:#9cff57;
+  --text:#ffffff;
+  --muted:#aaaaaa;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--text);font-family:"Segoe UI",Arial;overflow-x:hidden;}
+header{
+  position:sticky;top:0;
+  background:linear-gradient(90deg,#1a1c22,#111);
+  padding:12px;text-align:center;z-index:10;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.5);
+  display:flex;
+  align-items:center;
+  justify-content:center;
+}
+header h2{margin:0;flex:1;text-align:center;}
+header p{margin:4px 0 0;font-size:13px;color:var(--muted);flex-basis:100%;text-align:center;}
+
+/* BOTÃO MENU CANTO DIREITO */
+#menuBtn{
+  position:absolute;
+  right:10px;
+  top:12px;
+  font-size:24px;
+  cursor:pointer;
+  background:none;
+  border:none;
+  color:white;
+  z-index:15;
+  transition: transform 0.2s;
+}
+#menuBtn:hover{
+  transform: scale(1.2);
+}
+
+/* MENU LATERAL */
+#menu{
+  position:fixed;
+  top:0;
+  left:-220px;
+  width:200px;
+  height:100%;
+  background:var(--card);
+  box-shadow:2px 0 10px rgba(0,0,0,0.7);
+  transition:left 0.3s;
+  padding:20px;
+  display:flex;
+  flex-direction:column;
+  gap:20px;
+  z-index:20;
+}
+#menu button{
+  background:none;
+  border:none;
+  color:white;
+  font-size:16px;
+  text-align:left;
+  cursor:pointer;
+  transition: color 0.2s;
+}
+#menu button:hover{color:var(--primary);}
+#menuContent{
+  margin-top:20px;
+  font-size:14px;
+  line-height:1.4;
+  color:var(--text);
+  white-space:pre-line;
+}
+
+/* BOTÕES DE MATERIA */
+#materias{
+  display:flex;gap:6px;padding:10px;overflow-x:auto;
+  scroll-behavior: smooth;
+}
+#materias button{
+  background: var(--card);
+  color: white;
+  border: none;
+  padding: 10px 16px;
+  border-radius: 25px;
+  font-size: 14px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.4);
+}
+#materias button:hover{
+  transform: translateY(-3px);
+  box-shadow: 0 5px 10px rgba(0,0,0,0.5);
+}
+#materias button.active{
+  background: var(--primary);
+  color: black;
+  transform: scale(1.1);
+  box-shadow: 0 6px 12px rgba(0,0,0,0.6);
+}
+
+/* CHAT */
+.chatBox{
+  padding:10px;
+  height:60vh;
+  margin-bottom:110px;
+  overflow-y:auto;
+}
+.msg{
+  max-width:80%;
+  padding:10px;
+  margin:6px 0;
+  border-radius:14px;
+  font-size:14px;
+  opacity:0;
+  transform: translateY(20px);
+}
+.user{background:#263a1f;color:var(--user);margin-left:auto}
+.bot{background:#1f2a3a;color:var(--primary)}
+
+/* INPUT AREA */
+.inputArea{
+  position:fixed;bottom:12px;left:0;width:100%;
+  padding:10px;background:#111;display:flex;gap:8px;z-index:20;
+}
+input{
+  flex:1;padding:12px;border-radius:25px;border:none;
+  background:var(--card);color:white;
+}
+button.send{
+  background:var(--primary);border:none;border-radius:50%;
+  width:44px;height:44px;font-size:18px;
+  cursor:pointer;
+  transition: transform 0.2s;
+}
+button.send:hover{ transform: scale(1.1); }
+
+#quizArea{display:none}
+.quizBtn{
+  background:var(--card);border:none;color:white;
+  padding:8px 14px;border-radius:12px;margin-top:8px;
+  cursor:pointer;
+  transition: all 0.3s;
+}
+.quizBtn:hover{
+  background:var(--primary); color:black;
+  transform: scale(1.05);
+}
+</style>
+</head>
+
+<body>
+
+<!-- BOTÃO MENU -->
+<button id="menuBtn" onclick="toggleMenu()">🌐</button>
+
+<!-- MENU LATERAL -->
+<div id="menu">
+  <button onclick="mostrarCreditos()">📃 Créditos</button>
+  <button onclick="mostrarSobre()">❔ Sobre</button>
+  <div id="menuContent"></div>
+</div>
+
+<header>
+  <h2>🤖 A.V.E</h2>
+  <p>XP: <span id="xp">0</span> · Nível: <span id="nivel">1</span></p>
+</header>
+
+<div id="materias">
+  <button class="active" onclick="setMateria('livre', event)">💬 Livre</button>
+  <button onclick="setMateria('matematica', event)">➗ Matemática</button>
+  <button onclick="setMateria('portugues', event)">📚 Português</button>
+  <button onclick="setMateria('historia', event)">🏛 História</button>
+  <button onclick="setMateria('geografia', event)">🌍 Geografia</button>
+  <button onclick="setMateria('ciencias', event)">🔬 Ciências</button>
+  <button onclick="setMateria('ingles', event)">🗣 Inglês</button>
+  <button onclick="abrirQuiz()">🧠 Quiz</button>
+</div>
+
+<div id="chatNormal" class="chatBox"></div>
+
+<div id="quizArea">
+  <div id="chatQuiz" class="chatBox"></div>
+  <div class="inputArea">
+    <input id="respostaQuiz" placeholder="Resposta do quiz"
+      onkeydown="if(event.key==='Enter')responderQuiz()">
+    <button class="send" onclick="responderQuiz()">✔</button>
+  </div>
+  <div style="text-align:center;margin-bottom:140px">
+    <button class="quizBtn" onclick="sairQuiz()">⬅ Voltar</button>
+  </div>
+</div>
+
+<div class="inputArea" id="inputNormal">
+  <input id="entrada" placeholder="Digite sua pergunta..."
+    onkeydown="if(event.key==='Enter')enviar()">
+  <button class="send" onclick="enviar()">➤</button>
+</div>
+
+<script>
+let materia="livre";
+let chatNormal=document.getElementById("chatNormal");
+let chatQuiz=document.getElementById("chatQuiz");
+let xp=Number(localStorage.getItem("xp"))||0;
+document.getElementById("xp").innerText=xp;
+document.getElementById("nivel").innerText=Math.floor(xp/50)+1;
+
+// DIGITAÇÃO ANIMADA
+function addMsg(txt, cls, chat) {
+  let d = document.createElement("div");
+  d.className = "msg " + cls;
+  chat.appendChild(d);
+  chat.scrollTop = chat.scrollHeight;
+  let i = 0;
+  function typeWriter() {
+    if (i < txt.length) {
+      d.innerText = txt.substring(0, i + 1);
+      i++;
+      setTimeout(typeWriter, 30);
+    }
+  }
+  typeWriter();
+  d.style.opacity = 0;
+  d.style.transform = "translateY(20px)";
+  setTimeout(() => {
+    d.style.transition = "all 0.4s ease";
+    d.style.opacity = 1;
+    d.style.transform = "translateY(0)";
+  }, 10);
+}
+
+// MENU
+let menuAberto = false;
+function toggleMenu(){
+  const menu = document.getElementById("menu");
+  if(menuAberto){ menu.style.left = "-220px"; }
+  else{ menu.style.left = "0"; }
+  menuAberto = !menuAberto;
+}
+
+// CRÉDITOS ATUALIZADOS
+function mostrarCreditos(){
+  document.getElementById("menuContent").innerText = 
+`Criado por: 
+Moogle.inc
+
+Desenvolvedores:
+Fernando Bryan da Silva Oliveira,
+Davi Luiz Rocha Dias
+Joel Levi Fernandes da Silva 
+
+Software:
+Chat GPT
+Spck Editor`;
+}
+
+function mostrarSobre(){
+  document.getElementById("menuContent").innerText =
+`A.V.E - Assistente Virtual Estudantil
+Contém matérias escolares do 1° ao 9°.
+Também temos quizzes para ajudar o raciocínio lógico do estudante.
+
+⚠️ AVISO:
+Na parte de quiz, as respostas devem ser digitadas sem acento, caso contrário não funcionam.`;
+}
+
+// DISTÂNCIA DE LEVENSHTEIN PARA CORREÇÃO
+function distancia(a,b){
+  const m=a.length, n=b.length;
+  let dp=Array(m+1).fill(0).map(()=>Array(n+1).fill(0));
+  for(let i=0;i<=m;i++) dp[i][0]=i;
+  for(let j=0;j<=n;j++) dp[0][j]=j;
+  for(let i=1;i<=m;i++){
+    for(let j=1;j<=n;j++){
+      if(a[i-1]===b[j-1]) dp[i][j]=dp[i-1][j-1];
+      else dp[i][j]=Math.min(dp[i-1][j]+1, dp[i][j-1]+1, dp[i-1][j-1]+1);
+    }
+  }
+  return dp[m][n];
+}
+
+const palavrasCorretas = ["dois","três","quatro","cinco","seis","sete","o","é","casa","bola","gato","cachorro","olá","obrigado","valeu","tudo","bem"];
+
+function corrigirPalavra(texto){
+  let palavras = texto.split(/\s+/);
+  let sugestoes = [];
+  palavras.forEach(p=>{
+    let menorDist = Infinity;
+    let correcao = p;
+    palavrasCorretas.forEach(c=>{
+      let d = distancia(p.toLowerCase(),c);
+      if(d < menorDist) { menorDist=d; correcao=c; }
+    });
+    if(menorDist>0 && menorDist<=2) sugestoes.push({original:p, correcao:correcao});
+  });
+  return sugestoes;
+}
+
+// DICIONÁRIO INGLÊS
+const traducoes = {
+  "hello": "olá",
+  "hi": "oi",
+  "good morning": "bom dia",
+  "good night": "boa noite",
+  "thank you": "obrigado",
+  "thanks": "valeu",
+  "how are you": "como você está",
+  "i am fine": "estou bem",
+  "yes": "sim",
+  "no": "não",
+  "dog": "cachorro",
+  "cat": "gato",
+  "house": "casa",
+  "school": "escola",
+  "book": "livro",
+  "pen": "caneta"
+};
+
+function traduzir(texto){
+  let t = texto.toLowerCase().trim();
+  if(traducoes[t]) return traducoes[t];
+  for(let key in traducoes){
+    if(traducoes[key] === t) return key;
+  }
+  return null;
+}
+
+// FUNÇÕES CHAT E QUIZ
+function setMateria(m, e){
+  materia=m;
+  document.getElementById("quizArea").style.display="none";
+  chatNormal.style.display="block";
+  document.getElementById("inputNormal").style.display="flex";
+  document.querySelectorAll("#materias button").forEach(b=>b.classList.remove("active"));
+  e.target.classList.add("active");
+  addMsg("Modo "+m+" ativado 📘","bot",chatNormal);
+}
+
+function enviar(){
+  let t=entrada.value.toLowerCase().trim();
+  if(!t)return;
+  addMsg(t,"user",chatNormal);
+  entrada.value="";
+  let r="Não entendi 🤔";
+
+  if(materia==="livre"){
+    if(["oi","ola","olá"].includes(t)) r="Oi! Como posso ajudar 😁";
+    else if(t.includes("tudo bem")) r="Tudo bem 😄 e você?";
+    else if(["obrigado","obrigada","valeu"].includes(t)) r="De nada 😆";
+    else if(t.includes("que dia é hoje")) r="Hoje é "+new Date().toLocaleDateString("pt-BR");
+  }
+
+  if(materia==="portugues"){
+    let sugestoes = corrigirPalavra(t);
+    if(sugestoes.length>0){
+      r = sugestoes.map(s=>`O correto é '${s.correcao}' ✅`).join("\n");
+    } else {
+      if(t.includes("quatro porquês")) r="São: por que, porque, porquê e por quê 📚";
+      else if(t.startsWith("como se escreve")) r="Verifique a ortografia no dicionário 📖";
+      else if(t.includes("plural")) r="Plural é quando há mais de um elemento.";
+    }
+  }
+
+  if(materia==="ingles"){
+    let trad = traduzir(t);
+    if(trad) r = `Tradução: ${trad}`;
+    else r = "Não encontrei tradução 😅";
+  }
+
+  if(materia==="matematica"){ try{ r="Resultado: "+eval(t.replace("x","*")); }catch{ if(t.includes("tabuada")) r="Exemplo: 5 x 5 = 25"; } }
+
+  // HISTÓRIA ATUALIZADA
+  if(materia==="historia"){
+    if(t.includes("descobriu o brasil")) r="Pedro Álvares Cabral descobriu o Brasil em 1500 🇧🇷";
+    else if(t.includes("primeira guerra")) r="A Primeira Guerra Mundial ocorreu entre 1914 e 1918.";
+    else if(t.includes("segunda guerra")) r="A Segunda Guerra Mundial aconteceu de 1939 a 1945.";
+    else if(t.includes("cristovao colombo")) r="Cristóvão Colombo chegou à América em 1492.";
+    else if(t.includes("napoleao bonaparte")) r="Napoleão Bonaparte foi um líder militar e imperador francês.";
+    else if(t.includes("queda do muro de berlim")) r="O muro de Berlim caiu em 1989 🏛️";
+    else if(t.includes("imprensa")) r="Johannes Gutenberg inventou a imprensa por volta de 1440.";
+    else if(t.includes("revolucao francesa")) r="A Revolução Francesa começou em 1789 e terminou em 1799.";
+    else if(t.includes("independencia do brasil")) r="O Brasil declarou independência de Portugal em 1822 🇧🇷";
+  }
+
+  if(materia==="geografia"){
+    if(t.includes("onde fica o brasil")) r="O Brasil fica na América do Sul 🌎";
+    else if(t.includes("estados unidos")) r="Os EUA ficam na América do Norte 🇺🇸";
+    else if(t.includes("india")) r="A Índia fica no continente asiático 🇮🇳";
+    else if(t.includes("antartida")) r="A Antártida é um continente gelado no sul do planeta ❄️";
+    else if(t.includes("triangulo das bermudas")) r="É uma região do Oceano Atlântico cercada por mistérios.";
+  }
+  if(materia==="ciencias"){
+    if(t.includes("maior órgão")) r="O maior órgão do corpo humano é a pele 🧬";
+    else if(t.includes("elemento 46")) r="O elemento 46 da tabela periódica é o Paládio.";
+    else if(t.includes("corrente eletrica")) r="É o movimento de elétrons em um condutor ⚡";
+    else if(t.includes("curto circuito")) r="É quando a corrente passa por um caminho indevido.";
+  }
+
+  setTimeout(()=>addMsg(r,"bot",chatNormal),300);
+}
+
+/* QUIZ */
+const perguntas=[
+ {p:"Capital do Brasil?",r:"brasilia"},
+ {p:"2+3=?",r:"5"},
+ {p:"Maior órgão humano?",r:"pele"},
+ {p:"Planeta vermelho?",r:"marte"},
+ {p:"Continente da Índia?",r:"asia"},
+ {p:"Plural de pão?",r:"paes"},
+ {p:"Maior oceano?",r:"pacifico"},
+ {p:"Quem descobriu o Brasil?",r:"pedro alvares cabral"},
+ {p:"Quantos dias tem uma semana?",r:"7"},
+ {p:"Estado físico do gelo?",r:"solido"}
+];
+let usadas=[],atual;
+
+function abrirQuiz(){
+  chatNormal.style.display="none";
+  document.getElementById("inputNormal").style.display="none";
+  document.getElementById("quizArea").style.display="block";
+  chatQuiz.innerHTML="";
+  usadas=[];
+  novaPergunta();
+}
+
+function novaPergunta(){
+  if(usadas.length===perguntas.length){
+    addMsg("🎉 Quiz finalizado!","bot",chatQuiz);
+    return;
+  }
+  do{ atual=perguntas[Math.floor(Math.random()*perguntas.length)]; }
+  while(usadas.includes(atual));
+  usadas.push(atual);
+  addMsg("❓ "+atual.p,"bot",chatQuiz);
+}
+
+function responderQuiz(){
+  let r=respostaQuiz.value.toLowerCase().trim();
+  if(!r)return;
+  addMsg(r,"user",chatQuiz);
+  respostaQuiz.value="";
+  if(r===atual.r){
+    addMsg("✅ Correto! +10 XP","bot",chatQuiz);
+    xp+=10;
+    localStorage.setItem("xp",xp);
+    document.getElementById("xp").innerText=xp;document.getElementById("nivel").innerText=Math.floor(xp/50)+1;
+  }else{
+    addMsg("❌ Errado! Resposta: "+atual.r,"bot",chatQuiz);
+  }
+  novaPergunta();
+}
+
+function sairQuiz(){
+  document.getElementById("quizArea").style.display="none";
+  chatNormal.style.display="block";
+  document.getElementById("inputNormal").style.display="flex";
+}
+</script>
+
+</body>
+</html>
